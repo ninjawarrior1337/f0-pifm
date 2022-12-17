@@ -5,11 +5,11 @@ pub mod str;
 pub mod viewport;
 
 pub mod misc {
-    use heapless::Vec;
+    use alloc::{vec::Vec, string::String};
     use flipperzero_sys as sys;
 
-    pub fn send_over_uart(v: &mut Vec<u8, 32>) {
-        let mut ln: heapless::String<1> = heapless::String::from("\n");
+    pub fn send_over_uart(v: &mut Vec<u8>) {
+        let mut ln: String = String::from("\n");
         unsafe {
             sys::furi_hal_uart_init(sys::FuriHalUartId_FuriHalUartIdLPUART1, 9600);
             sys::furi_hal_uart_tx(

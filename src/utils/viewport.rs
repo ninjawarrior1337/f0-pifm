@@ -27,7 +27,6 @@ impl<C> ViewPort<C> {
                 draw_callback: None,
                 input_callback: None,
             };
-            // sys::view_port_draw_callback_set(self.raw_viewport(), f, mem::transmute(c));
             vp
         }
     }

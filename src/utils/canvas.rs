@@ -1,7 +1,13 @@
-use embedded_graphics::{prelude::{DrawTarget, OriginDimensions, Size}, pixelcolor::BinaryColor, Pixel};
+use embedded_graphics::{prelude::{DrawTarget, OriginDimensions, Size, Point}, pixelcolor::BinaryColor, Pixel, primitives::{rectangle, Rectangle}};
 use flipperzero_sys as sys;
 
 pub struct Canvas(*mut sys::Canvas);
+
+impl Canvas {
+    pub fn bounding_box(&self) -> Rectangle {
+        rectangle::Rectangle::new(Point::zero(), self.size())
+    }
+}
 
 impl From<*mut sys::Canvas> for Canvas {
     fn from(value: *mut sys::Canvas) -> Self {
