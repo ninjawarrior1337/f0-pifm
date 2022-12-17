@@ -1,0 +1,27 @@
+[package]
+name = "f0"
+version = "0.1.0"
+edition = "2021"
+
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+
+[[bin]]
+name = "f0"
+bench = false
+test = false
+
+[dependencies]
+flipperzero = "^0.5"
+flipperzero-rt = "^0.5"
+flipperzero-sys = "^0.5"
+flipperzero-alloc = "^0.5"
+
+serde-json-core = "0.5.0"
+heapless = "0.7.16"
+serde = {version = "1.0.150", default-features = false, features=["derive"]}
+embedded-graphics = "0.7.1"
+prost = {version = "0.10", default-features = false}
