@@ -27,6 +27,7 @@ use flipperzero::furi::{
     message_queue::MessageQueue,
     sync::{Mutex, MutexGuard},
 };
+
 use flipperzero_rt::{entry, manifest};
 use flipperzero_sys as sys;
 use utils::{gui::GuiHandle, viewport::ViewPort};
@@ -108,6 +109,9 @@ fn main(_p: *mut u8) -> i32 {
 
                             utils::misc::send_over_uart(&mut sf.encode_length_delimited_to_vec());
                         }
+                        InputKey::Left => {
+                            panic!("test panic")
+                        },
                         InputKey::Back => break 'main_loop,
                         _ => {}
                     },

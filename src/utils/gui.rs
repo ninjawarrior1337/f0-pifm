@@ -1,9 +1,6 @@
-use core::{ffi::c_char, marker::PhantomData};
+use core::{ffi::c_char};
 
-use alloc::rc::Rc;
 use flipperzero_sys as sys;
-
-use super::viewport::ViewPort;
 
 pub struct GuiHandle {
     gui: *mut sys::Gui,

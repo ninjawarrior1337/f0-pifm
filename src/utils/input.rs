@@ -27,6 +27,7 @@ impl From<u8> for InputKey {
 }
 
 #[derive(PartialEq)]
+#[repr(u8)]
 pub enum InputType {
     Long,
     Press,
