@@ -1,29 +1,35 @@
-use core::{ffi::c_void, mem};
+use core::{borrow::BorrowMut, ffi::c_void, mem};
 
 use flipperzero_sys as sys;
 
-use alloc::{sync::Arc, boxed::Box};
-use flipperzero::furi::{sync::{Mutex, MutexGuard}, message_queue::MessageQueue};
+use alloc::{boxed::Box, rc::Rc, sync::Arc};
+use flipperzero::furi::{
+    message_queue::MessageQueue,
+    sync::{Mutex, MutexGuard},
+};
 use sys::ViewPortInputCallback;
 
-use super::canvas::Canvas;
+use super::{canvas::Canvas, gui::GuiHandle, input::InputEvent};
 
-type DrawCallback<C> = dyn Fn(&mut Canvas, MutexGuard<C>) -> ();
-type BoxedDrawCallback<C> = Box<DrawCallback<C>>;
+type DrawCallback = dyn Fn(&mut Canvas) -> ();
+type BoxedDrawCallback = Box<DrawCallback>;
 
-pub struct ViewPort<C> {
+type InputCallback = dyn Fn(InputEvent) -> ();
+type BoxedInputCallback = Box<InputCallback>;
+
+pub struct ViewPort {
     vp: *mut sys::ViewPort,
-    ac: Arc<Mutex<C>>,
-    draw_callback: Option<BoxedDrawCallback<C>>,
-    input_callback: Option<Box<dyn Fn() -> ()>>,
+    gui_handle: Option<GuiHandle>,
+    draw_callback: Option<BoxedDrawCallback>,
+    input_callback: Option<BoxedInputCallback>,
 }
 
-impl<C> ViewPort<C> {
-    pub fn new(ac: Arc<Mutex<C>>) -> Self {
+impl ViewPort {
+    pub fn new() -> Self {
         unsafe {
-            let vp: ViewPort<C> = ViewPort {
+            let vp: ViewPort = ViewPort {
                 vp: sys::view_port_alloc(),
-                ac: ac,
+                gui_handle: None,
                 draw_callback: None,
                 input_callback: None,
             };
@@ -31,7 +37,7 @@ impl<C> ViewPort<C> {
         }
     }
 
-    pub fn raw_viewport(&self) -> *mut sys::ViewPort {
+    pub(super) fn raw_viewport(&self) -> *mut sys::ViewPort {
         self.vp
     }
 
@@ -41,34 +47,61 @@ impl<C> ViewPort<C> {
         }
     }
 
-    pub fn on_input<M>(&self, f: ViewPortInputCallback, mq: &MessageQueue<M>) {
-        unsafe { sys::view_port_input_callback_set(self.raw_viewport(), f, mem::transmute(mq)) }
+    pub fn attach_to_gui(&mut self, gui_handle: GuiHandle) {
+        unsafe {
+            sys::gui_add_view_port(
+                gui_handle.inner_gui(),
+                self.raw_viewport(),
+                GuiHandle::FULLSCREEN,
+            );
+        }
+        self.gui_handle = Some(gui_handle);
     }
 
-    pub fn on_draw(&mut self, f: impl Fn(&mut Canvas, MutexGuard<C>) -> () + 'static) {
+    pub fn on_input(&mut self, f: impl Fn(InputEvent) + 'static) {
+        self.input_callback = Some(Box::new(f));
+        unsafe {
+            sys::view_port_input_callback_set(
+                self.raw_viewport(),
+                Some(Self::_raw_input_callback),
+                mem::transmute(&self.input_callback),
+            )
+        }
+    }
+
+    pub unsafe extern "C" fn _raw_input_callback(ie: *mut sys::InputEvent, ctx: *mut c_void) {
+        let f: &Option<BoxedInputCallback> = mem::transmute(ctx);
+        if let Some(dcb) = f {
+            (dcb)(ie.into());
+        }
+    }
+
+    pub fn on_draw(&mut self, f: impl Fn(&mut Canvas) + 'static + Sync) {
         self.draw_callback = Some(Box::new(f));
         unsafe {
             sys::view_port_draw_callback_set(
                 self.raw_viewport(),
-                Some(ViewPort::<C>::_raw_draw_callback),
-                mem::transmute(self),
+                Some(ViewPort::_raw_draw_callback),
+                mem::transmute(&self.draw_callback),
             );
         }
     }
 
     pub unsafe extern "C" fn _raw_draw_callback(c: *mut sys::Canvas, ctx: *mut c_void) {
-        let cx: &mut ViewPort<C> = mem::transmute(ctx);
-        if let Some(dcb) = &cx.draw_callback {
-            if let Ok(ac) = cx.ac.clone().lock() {
-                (dcb)(&mut Canvas::from(c), ac);
-            }
+        let f: &Option<BoxedDrawCallback> = mem::transmute(ctx);
+        if let Some(dcb) = f {
+            (dcb)(&mut c.into());
         }
     }
 }
 
-impl<C> Drop for ViewPort<C> {
+impl Drop for ViewPort {
     fn drop(&mut self) {
         unsafe {
+            if let Some(gui) = &self.gui_handle {
+                sys::view_port_enabled_set(self.raw_viewport(), false);
+                sys::gui_remove_view_port(gui.inner_gui(), self.raw_viewport());
+            }
             sys::view_port_free(self.raw_viewport());
         }
     }
