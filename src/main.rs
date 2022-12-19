@@ -9,14 +9,14 @@ extern crate flipperzero_alloc;
 use core::{borrow::BorrowMut, ffi::c_void, mem, time::Duration, cell::RefCell};
 
 use crate::utils::input::{InputEvent, InputKey, InputType};
-use alloc::{format, rc::Rc, sync::Arc, vec::Vec};
+use alloc::{rc::Rc, sync::Arc, vec::{Vec, self}, boxed::Box};
 
 use embedded_graphics::{
-    mono_font::{iso_8859_13::FONT_6X10, iso_8859_4::FONT_6X9, MonoTextStyle},
+    mono_font::{iso_8859_13::FONT_6X10, ascii::FONT_6X9, MonoTextStyle},
     pixelcolor::BinaryColor,
     prelude::Point,
     text::{Alignment, Text},
-    Drawable,
+    Drawable, primitives::PrimitiveStyleBuilder,
 };
 use embedded_layout::{
     layout::linear::{spacing, ElementSpacing, LinearLayout},
@@ -30,6 +30,11 @@ use flipperzero::furi::{
 
 use flipperzero_rt::{entry, manifest};
 use flipperzero_sys as sys;
+
+use alloc::str::FromStr;
+use statig::{StateMachine, Response::{self, Transition}, StateMachineSharedStorage, InitializedStatemachine};
+use strum::{IntoEnumIterator, IntoStaticStr, EnumString, EnumIter};
+
 use utils::{gui::GuiHandle, viewport::ViewPort};
 
 use prost::Message;
@@ -46,37 +51,68 @@ manifest!(
 
 entry!(main);
 
-fn draw_callback(cv: &mut crate::utils::canvas::Canvas, app: MutexGuard<HelloRust>) {
+fn draw_callback(cv: &mut crate::utils::canvas::Canvas, app: MutexGuard<InitializedStatemachine<AppState>>) {
     use embedded_layout::prelude::*;
 
-    let text_style = MonoTextStyle::new(&FONT_6X9, BinaryColor::On);
+    let mut text_style_sel = MonoTextStyle::new(&FONT_6X9, BinaryColor::Off);
+    text_style_sel.background_color = Some(BinaryColor::On);
+    let mut text_style_desel = MonoTextStyle::new(&FONT_6X9, BinaryColor::On);
+    text_style_desel.background_color = Some(BinaryColor::Off);
 
-    let text = Text::new("Embeded Layout", Point::zero(), text_style);
+    let mut ui = match app.state() {
+        State::Start {  } => {
+            alloc::vec![
+                Text::new("Start", Point::zero(), text_style_sel),
+                Text::new("Stop", Point::zero(), text_style_desel),
+            ]
+        },
+        State::Stop {  } => {
+            alloc::vec![
+                Text::new("Start", Point::zero(), text_style_desel),
+                Text::new("Stop", Point::zero(), text_style_sel),
+            ]
+        },
+    };
 
-    let rand_str = format!("Rand: {}", app.rand);
-    let rand_disp = Text::new(rand_str.as_str(), Point::zero(), text_style);
-
-    LinearLayout::vertical(Views::new(&mut [text, rand_disp]))
+    LinearLayout::vertical(Views::new(&mut ui))
         .with_alignment(horizontal::Center)
+        .with_spacing(spacing::FixedMargin(16))
         .arrange()
         .align_to(&cv.bounding_box(), horizontal::Center, vertical::Center)
-        .with_spacing(spacing::FixedMargin(3))
         .draw(cv)
         .unwrap()
 }
 
-struct HelloRust {
-    pub rand: u32,
+#[derive(Default)]
+pub struct AppState {
+    rand: u32,
+    home_selected: u8
+}
+
+pub struct Event;
+
+#[statig::state_machine(initial = "State::start()", state(derive(Debug)))]
+impl AppState {
+    #[state]
+    fn start(&mut self, event: &Event) -> Response<State> {
+        self.home_selected = (self.home_selected+1)%2;
+        Transition(State::stop())
+    }
+
+    #[state]
+    fn stop(&mut self, event: &Event) -> Response<State> {
+        self.home_selected = (self.home_selected+1)%2;
+        Transition(State::start())
+    }
 }
 
 fn main(_p: *mut u8) -> i32 {
-    let mq: Rc<MessageQueue<InputEvent>> = Rc::new(MessageQueue::new(8));
-    let app = Arc::new(Mutex::new(HelloRust { rand: 0 }));
+    let app_state = AppState::default().state_machine().init();
+    let app = Arc::new(Mutex::new(app_state));
 
+    let mq: Rc<MessageQueue<InputEvent>> = Rc::new(MessageQueue::new(8));
     let mut vp = ViewPort::new();
     let gui = GuiHandle::new();
-
-    // let vp_cell = RefCell::new(vp);
 
     vp.attach_to_gui(gui);
 
@@ -93,26 +129,26 @@ fn main(_p: *mut u8) -> i32 {
         }
     });
 
-    'main_loop: loop {
+    loop {
         let m = mq.get(Duration::from_millis(100));
 
         if let Ok(ie) = m {
-            if let Ok(mut a) = app.lock() {
+            if let Ok(mut state) = app.lock() {
                 match ie.get_type() {
                     InputType::Press => match ie.get_key() {
                         InputKey::Ok => {
                             unsafe {
-                                a.rand = sys::furi_hal_random_get();
+                                state.rand = sys::furi_hal_random_get();
                             }
                             let mut sf = pifm::SetFrequency::default();
-                            sf.freq = a.rand;
+                            sf.freq = state.rand;
 
                             utils::misc::send_over_uart(&mut sf.encode_length_delimited_to_vec());
                         }
-                        InputKey::Left => {
-                            panic!("test panic")
+                        InputKey::Up | InputKey::Down => {
+                            state.handle(&Event)
                         },
-                        InputKey::Back => break 'main_loop,
+                        InputKey::Back => break,
                         _ => {}
                     },
 
