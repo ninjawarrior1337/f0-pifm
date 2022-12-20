@@ -95,25 +95,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "f0"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "embedded-graphics",
- "embedded-layout",
- "flipperzero",
- "flipperzero-alloc",
- "flipperzero-rt",
- "flipperzero-sys",
- "itoa",
- "prost",
- "prost-build",
- "serde",
- "statig",
- "strum",
-]
-
-[[package]]
 name = "fastrand"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -272,6 +253,26 @@ checksum = "e6d5014253a1331579ce62aa67443b4a658c5e7dd03d4bc6d302b94474888143"
 dependencies = [
  "fixedbitset",
  "indexmap",
+]
+
+[[package]]
+name = "pifm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "embedded-graphics",
+ "embedded-layout",
+ "flipperzero",
+ "flipperzero-alloc",
+ "flipperzero-rt",
+ "flipperzero-sys",
+ "itoa",
+ "prost",
+ "prost-build",
+ "serde",
+ "statig",
+ "strum",
+ "totsugeki",
 ]
 
 [[package]]
@@ -506,6 +507,16 @@ dependencies = [
  "redox_syscall",
  "remove_dir_all",
  "winapi",
+]
+
+[[package]]
+name = "totsugeki"
+version = "0.1.0"
+dependencies = [
+ "embedded-graphics",
+ "flipperzero",
+ "flipperzero-alloc",
+ "flipperzero-sys",
 ]
 
 [[package]]

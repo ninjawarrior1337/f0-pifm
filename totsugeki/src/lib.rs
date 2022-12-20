@@ -1,8 +1,13 @@
+#![no_std]
+
 pub mod canvas;
 pub mod gui;
 pub mod input;
 pub mod str;
 pub mod viewport;
+
+extern crate alloc;
+extern crate flipperzero_alloc;
 
 pub mod misc {
     use alloc::{vec::Vec, string::String};

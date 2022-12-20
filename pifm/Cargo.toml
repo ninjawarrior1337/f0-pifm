@@ -1,0 +1,36 @@
+[package]
+name = "pifm"
+version = "0.1.0"
+edition = "2021"
+
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[[bin]]
+name = "pifm"
+bench = false
+test = false
+
+[dependencies]
+flipperzero = {workspace = true}
+flipperzero-sys = {workspace = true}
+flipperzero-alloc = {workspace = true}
+flipperzero-rt = "0.5"
+
+totsugeki = { path = "../totsugeki", version = "*" }
+
+itoa = "1.0"
+strum = { version = "0.24", default-features = false, features = ["derive"] }
+
+serde = {version = "1.0.150", default-features = false, features=["derive"]}
+prost = {version = "0.11.3", default-features = false, features = ["prost-derive"]}
+embedded-graphics = "0.7.1"
+embedded-layout = "0.2.0"
+
+statig = "0.2.0-beta.0"
+
+[build-dependencies]
+prost-build = "0.11.4"
+anyhow = "1.0.68"

@@ -1,14 +1,11 @@
 #![no_std]
 #![no_main]
 
-mod utils;
-
 extern crate alloc;
 extern crate flipperzero_alloc;
 
 use core::{borrow::BorrowMut, ffi::c_void, mem, time::Duration, cell::RefCell};
 
-use crate::utils::input::{InputEvent, InputKey, InputType};
 use alloc::{rc::Rc, sync::Arc, vec::{Vec, self}, boxed::Box};
 
 use embedded_graphics::{
@@ -35,9 +32,8 @@ use alloc::str::FromStr;
 use statig::{StateMachine, Response::{self, Transition}, StateMachineSharedStorage, InitializedStatemachine};
 use strum::{IntoEnumIterator, IntoStaticStr, EnumString, EnumIter};
 
-use utils::{gui::GuiHandle, viewport::ViewPort};
-
 use prost::Message;
+use totsugeki::{canvas::Canvas, input::{InputEvent, InputType, InputKey}, viewport::ViewPort, gui::GuiHandle};
 
 pub mod pifm {
     include!(concat!(env!("OUT_DIR"), "/pifm.proto.rs"));
@@ -51,7 +47,7 @@ manifest!(
 
 entry!(main);
 
-fn draw_callback(cv: &mut crate::utils::canvas::Canvas, app: MutexGuard<InitializedStatemachine<AppState>>) {
+fn draw_callback(cv: &mut Canvas, app: MutexGuard<InitializedStatemachine<AppState>>) {
     use embedded_layout::prelude::*;
 
     let mut text_style_sel = MonoTextStyle::new(&FONT_6X9, BinaryColor::Off);
@@ -143,7 +139,7 @@ fn main(_p: *mut u8) -> i32 {
                             let mut sf = pifm::SetFrequency::default();
                             sf.freq = state.rand;
 
-                            utils::misc::send_over_uart(&mut sf.encode_length_delimited_to_vec());
+                            totsugeki::misc::send_over_uart(&mut sf.encode_length_delimited_to_vec());
                         }
                         InputKey::Up | InputKey::Down => {
                             state.handle(&Event)

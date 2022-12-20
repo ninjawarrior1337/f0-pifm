@@ -7,7 +7,6 @@ use flipperzero::furi::{
     message_queue::MessageQueue,
     sync::{Mutex, MutexGuard},
 };
-use sys::ViewPortInputCallback;
 
 use super::{canvas::Canvas, gui::GuiHandle, input::InputEvent};
 
