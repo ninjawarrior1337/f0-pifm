@@ -4,21 +4,18 @@
 extern crate alloc;
 extern crate flipperzero_alloc;
 
-use core::{borrow::BorrowMut, ffi::c_void, mem, time::Duration, cell::RefCell};
+use core::{time::Duration};
 
-use alloc::{rc::Rc, sync::Arc, vec::{Vec, self}, boxed::Box};
+use alloc::{rc::Rc, sync::Arc};
 
 use embedded_graphics::{
-    mono_font::{iso_8859_13::FONT_6X10, ascii::FONT_6X9, MonoTextStyle},
+    mono_font::{ascii::FONT_6X9, MonoTextStyle},
     pixelcolor::BinaryColor,
     prelude::Point,
-    text::{Alignment, Text},
-    Drawable, primitives::PrimitiveStyleBuilder,
+    text::{Text}, Drawable,
 };
 use embedded_layout::{
-    layout::linear::{spacing, ElementSpacing, LinearLayout},
-    prelude::Chain,
-    view_group::Views,
+    layout::linear::{spacing, LinearLayout},
 };
 use flipperzero::furi::{
     message_queue::MessageQueue,
@@ -28,9 +25,7 @@ use flipperzero::furi::{
 use flipperzero_rt::{entry, manifest};
 use flipperzero_sys as sys;
 
-use alloc::str::FromStr;
 use statig::{StateMachine, Response::{self, Transition}, StateMachineSharedStorage, InitializedStatemachine};
-use strum::{IntoEnumIterator, IntoStaticStr, EnumString, EnumIter};
 
 use prost::Message;
 use totsugeki::{canvas::Canvas, input::{InputEvent, InputType, InputKey}, viewport::ViewPort, gui::GuiHandle};

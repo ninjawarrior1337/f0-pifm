@@ -1,12 +1,9 @@
-use core::{borrow::BorrowMut, ffi::c_void, mem};
+use core::{ffi::c_void, mem};
 
 use flipperzero_sys as sys;
 
-use alloc::{boxed::Box, rc::Rc, sync::Arc};
-use flipperzero::furi::{
-    message_queue::MessageQueue,
-    sync::{Mutex, MutexGuard},
-};
+use alloc::{boxed::Box};
+
 
 use super::{canvas::Canvas, gui::GuiHandle, input::InputEvent};
 
