@@ -1,0 +1,12 @@
+Flipper -> Pi
+set freq <freq>
+set song <idx>
+play
+stop
+get songs -> resp (s)
+exit (stops process on the pi)
+
+Pi -> Flipper
+(s) songs <csv of songs>
+
+We're basically gonna impl a command line interface on the Pi and the flipper with execute commands using that interface

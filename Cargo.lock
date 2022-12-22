@@ -256,7 +256,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pifm"
+name = "pifm-f0"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -271,7 +271,7 @@ dependencies = [
  "prost-build",
  "serde",
  "statig",
- "strum",
+ "tinybmp",
  "totsugeki",
 ]
 
@@ -416,12 +416,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustversion"
-version = "1.0.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5583e89e108996506031660fe09baa5011b9dd0341b89029313006d1fb508d70"
-
-[[package]]
 name = "serde"
 version = "1.0.150"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -463,28 +457,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "strum"
-version = "0.24.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
-dependencies = [
- "strum_macros",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.24.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e385be0d24f186b4ce2f9982191e7101bb737312ad61c1f2f984f34bcf85d59"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "rustversion",
- "syn",
-]
-
-[[package]]
 name = "syn"
 version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -507,6 +479,15 @@ dependencies = [
  "redox_syscall",
  "remove_dir_all",
  "winapi",
+]
+
+[[package]]
+name = "tinybmp"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e959c507975d768a226a08227d56791f6e60bddcf714ad7ef67ae2d20bae743"
+dependencies = [
+ "embedded-graphics",
 ]
 
 [[package]]

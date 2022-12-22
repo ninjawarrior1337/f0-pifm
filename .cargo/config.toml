@@ -19,5 +19,8 @@ rustflags = [
     "-Z", "no-unique-section-names=yes",
 ]
 
+# [target.arm-unknown-linux-gnueabihf]
+# linker = "arm-linux-gnueabihf-gcc"
+
 [build]
 target = "thumbv7em-none-eabihf"

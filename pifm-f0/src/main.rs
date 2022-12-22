@@ -4,19 +4,20 @@
 extern crate alloc;
 extern crate flipperzero_alloc;
 
-use core::{time::Duration};
+use core::time::Duration;
 
-use alloc::{rc::Rc, sync::Arc};
+use alloc::{rc::Rc, sync::Arc, vec::Vec};
 
 use embedded_graphics::{
-    mono_font::{ascii::FONT_6X9, MonoTextStyle},
+    image::Image,
+    mono_font::{ascii::FONT_6X9, MonoFont, MonoTextStyle},
     pixelcolor::BinaryColor,
-    prelude::Point,
-    text::{Text}, Drawable,
+    prelude::{Point, Size, DrawTarget},
+    primitives::{Rectangle, PrimitiveStyle, Circle, Line, Primitive},
+    text::Text,
+    Drawable,
 };
-use embedded_layout::{
-    layout::linear::{spacing, LinearLayout},
-};
+use embedded_layout::{layout::linear::{spacing, LinearLayout}, View};
 use flipperzero::furi::{
     message_queue::MessageQueue,
     sync::{Mutex, MutexGuard},
@@ -25,10 +26,19 @@ use flipperzero::furi::{
 use flipperzero_rt::{entry, manifest};
 use flipperzero_sys as sys;
 
-use statig::{StateMachine, Response::{self, Transition}, StateMachineSharedStorage, InitializedStatemachine};
+use statig::{
+    InitializedStatemachine,
+    Response::{self, Transition},
+    StateMachine, StateMachineSharedStorage,
+};
 
 use prost::Message;
-use totsugeki::{canvas::Canvas, input::{InputEvent, InputType, InputKey}, viewport::ViewPort, gui::GuiHandle};
+use totsugeki::{
+    canvas::Canvas,
+    gui::GuiHandle,
+    input::{InputEvent, InputKey, InputType},
+    viewport::ViewPort,
+};
 
 pub mod pifm {
     include!(concat!(env!("OUT_DIR"), "/pifm.proto.rs"));
@@ -42,6 +52,12 @@ manifest!(
 
 entry!(main);
 
+// fn rx_uart() {
+//     unsafe {
+//         sys::furi_hal_uart_set_irq_cb(channel, callback, context)
+//     }
+// }
+
 fn draw_callback(cv: &mut Canvas, app: MutexGuard<InitializedStatemachine<AppState>>) {
     use embedded_layout::prelude::*;
 
@@ -51,33 +67,33 @@ fn draw_callback(cv: &mut Canvas, app: MutexGuard<InitializedStatemachine<AppSta
     text_style_desel.background_color = Some(BinaryColor::Off);
 
     let mut ui = match app.state() {
-        State::Start {  } => {
+        State::Start {} => {
             alloc::vec![
                 Text::new("Start", Point::zero(), text_style_sel),
                 Text::new("Stop", Point::zero(), text_style_desel),
             ]
-        },
-        State::Stop {  } => {
+        }
+        State::Stop {} => {
             alloc::vec![
                 Text::new("Start", Point::zero(), text_style_desel),
                 Text::new("Stop", Point::zero(), text_style_sel),
             ]
-        },
+        }
     };
 
     LinearLayout::vertical(Views::new(&mut ui))
         .with_alignment(horizontal::Center)
-        .with_spacing(spacing::FixedMargin(16))
+        .with_spacing(spacing::FixedMargin(4))
         .arrange()
         .align_to(&cv.bounding_box(), horizontal::Center, vertical::Center)
         .draw(cv)
-        .unwrap()
+        .unwrap();
 }
 
 #[derive(Default)]
 pub struct AppState {
     rand: u32,
-    home_selected: u8
+    home_selected: u8,
 }
 
 pub struct Event;
@@ -86,13 +102,13 @@ pub struct Event;
 impl AppState {
     #[state]
     fn start(&mut self, event: &Event) -> Response<State> {
-        self.home_selected = (self.home_selected+1)%2;
+        self.home_selected = (self.home_selected + 1) % 2;
         Transition(State::stop())
     }
 
     #[state]
     fn stop(&mut self, event: &Event) -> Response<State> {
-        self.home_selected = (self.home_selected+1)%2;
+        self.home_selected = (self.home_selected + 1) % 2;
         Transition(State::start())
     }
 }
@@ -134,11 +150,11 @@ fn main(_p: *mut u8) -> i32 {
                             let mut sf = pifm::SetFrequency::default();
                             sf.freq = state.rand;
 
-                            totsugeki::misc::send_over_uart(&mut sf.encode_length_delimited_to_vec());
+                            totsugeki::misc::send_over_uart(
+                                &mut sf.encode_length_delimited_to_vec(),
+                            );
                         }
-                        InputKey::Up | InputKey::Down => {
-                            state.handle(&Event)
-                        },
+                        InputKey::Up | InputKey::Down => state.handle(&Event),
                         InputKey::Back => break,
                         _ => {}
                     },

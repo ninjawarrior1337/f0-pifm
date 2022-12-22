@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "pifm",
+    "pifm-f0",
     "totsugeki"
 ]
 resolver = "2"
