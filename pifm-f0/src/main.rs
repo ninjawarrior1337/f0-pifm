@@ -153,7 +153,11 @@ fn main(_p: *mut u8) -> i32 {
             if let Ok(mut state) = app.lock() {
                 match ie.get_type() {
                     InputType::Press => state.handle(&ie.get_key()),
-
+                    InputType::Long => {
+                        if ie.get_key() == InputKey::Back {
+                            break;
+                        }
+                    }
                     _ => {}
                 }
             }
