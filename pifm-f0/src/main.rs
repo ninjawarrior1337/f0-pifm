@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+mod commands;
+
 extern crate alloc;
 extern crate flipperzero_alloc;
 
@@ -8,6 +10,7 @@ use core::time::Duration;
 
 use alloc::{rc::Rc, sync::Arc, vec::Vec};
 
+use commands::Command;
 use embedded_graphics::{
     image::Image,
     mono_font::{ascii::FONT_6X9, MonoFont, MonoTextStyle},
@@ -28,21 +31,16 @@ use flipperzero_sys as sys;
 
 use statig::{
     InitializedStatemachine,
-    Response::{self, Transition},
+    Response::{self, Transition, Handled},
     StateMachine, StateMachineSharedStorage,
 };
 
-use prost::Message;
 use totsugeki::{
     canvas::Canvas,
     gui::GuiHandle,
     input::{InputEvent, InputKey, InputType},
     viewport::ViewPort,
 };
-
-pub mod pifm {
-    include!(concat!(env!("OUT_DIR"), "/pifm.proto.rs"));
-}
 
 manifest!(
     name = "Hello, Rust!",
@@ -51,12 +49,6 @@ manifest!(
 );
 
 entry!(main);
-
-// fn rx_uart() {
-//     unsafe {
-//         sys::furi_hal_uart_set_irq_cb(channel, callback, context)
-//     }
-// }
 
 fn draw_callback(cv: &mut Canvas, app: MutexGuard<InitializedStatemachine<AppState>>) {
     use embedded_layout::prelude::*;
@@ -96,20 +88,38 @@ pub struct AppState {
     home_selected: u8,
 }
 
-pub struct Event;
-
 #[statig::state_machine(initial = "State::start()", state(derive(Debug)))]
 impl AppState {
     #[state]
-    fn start(&mut self, event: &Event) -> Response<State> {
-        self.home_selected = (self.home_selected + 1) % 2;
-        Transition(State::stop())
+    fn start(&mut self, event: &InputKey) -> Response<State> {
+        match event {
+            InputKey::Up | InputKey::Down => {
+                self.home_selected = (self.home_selected + 1) % 2;
+                Transition(State::stop())
+            },
+            InputKey::Ok => {
+                let c = Command::Play;
+                totsugeki::misc::send_over_uart(&mut c.raw_data());
+                Handled
+            }
+            _ => Handled
+        }
     }
 
     #[state]
-    fn stop(&mut self, event: &Event) -> Response<State> {
-        self.home_selected = (self.home_selected + 1) % 2;
-        Transition(State::start())
+    fn stop(&mut self, event: &InputKey) -> Response<State> {
+        match event {
+            InputKey::Up | InputKey::Down => {
+                self.home_selected = (self.home_selected + 1) % 2;
+                Transition(State::start())
+            },
+            InputKey::Ok => {
+                let c = Command::Stop;
+                totsugeki::misc::send_over_uart(&mut c.raw_data());
+                Handled
+            }
+            _ => Handled
+        }
     }
 }
 
@@ -142,22 +152,7 @@ fn main(_p: *mut u8) -> i32 {
         if let Ok(ie) = m {
             if let Ok(mut state) = app.lock() {
                 match ie.get_type() {
-                    InputType::Press => match ie.get_key() {
-                        InputKey::Ok => {
-                            unsafe {
-                                state.rand = sys::furi_hal_random_get();
-                            }
-                            let mut sf = pifm::SetFrequency::default();
-                            sf.freq = state.rand;
-
-                            totsugeki::misc::send_over_uart(
-                                &mut sf.encode_length_delimited_to_vec(),
-                            );
-                        }
-                        InputKey::Up | InputKey::Down => state.handle(&Event),
-                        InputKey::Back => break,
-                        _ => {}
-                    },
+                    InputType::Press => state.handle(&ie.get_key()),
 
                     _ => {}
                 }
