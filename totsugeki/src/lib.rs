@@ -10,11 +10,10 @@ extern crate alloc;
 extern crate flipperzero_alloc;
 
 pub mod misc {
-    use alloc::{vec::Vec, string::String};
     use flipperzero_sys as sys;
 
     pub fn send_over_uart(v: &mut [u8]) {
-        let mut ln: String = String::from("\n");
+        let mut ln  = ['\n' as u8];
         unsafe {
             sys::furi_hal_uart_init(sys::FuriHalUartId_FuriHalUartIdLPUART1, 115200);
             sys::furi_hal_uart_tx(
