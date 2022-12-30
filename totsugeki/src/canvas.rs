@@ -1,8 +1,25 @@
+#[cfg(feature = "embedded-graphics")]
 use embedded_graphics::{prelude::{DrawTarget, OriginDimensions, Size, Point}, pixelcolor::BinaryColor, Pixel, primitives::{rectangle, Rectangle}};
+
 use flipperzero_sys as sys;
 
-pub struct Canvas(*mut sys::Canvas);
+pub struct Canvas(pub *mut sys::Canvas);
 
+impl Canvas {
+    pub fn width(&self) -> u8 {
+        unsafe {
+            sys::canvas_width(self.0)
+        }
+    }
+
+    pub fn height(&self) -> u8 {
+        unsafe {
+            sys::canvas_height(self.0)
+        }
+    }
+}
+
+#[cfg(feature = "embedded-graphics")]
 impl Canvas {
     pub fn bounding_box(&self) -> Rectangle {
         rectangle::Rectangle::new(Point::zero(), self.size())
@@ -15,6 +32,7 @@ impl From<*mut sys::Canvas> for Canvas {
     }
 }
 
+#[cfg(feature = "embedded-graphics")]
 impl DrawTarget for Canvas {
     type Color = embedded_graphics::pixelcolor::BinaryColor;
 
@@ -38,12 +56,13 @@ impl DrawTarget for Canvas {
     }
 }
 
+#[cfg(feature = "embedded-graphics")]
 impl OriginDimensions for Canvas {
     fn size(&self) -> embedded_graphics::prelude::Size {
         unsafe {
             Size::new(
-                sys::canvas_width(self.0).into(),
-                sys::canvas_height(self.0).into(),
+                self.width().into(),
+                self.height().into(),
             )
         }
     }

@@ -1,4 +1,4 @@
-use alloc::{borrow::ToOwned, vec::Vec};
+use alloc::{borrow::ToOwned, vec::Vec, string::String};
 use itoa::Buffer;
 use arrform::{arrform, ArrForm};
 pub enum Command {
@@ -11,7 +11,7 @@ pub enum Command {
 }
 
 impl Command {
-    pub fn raw_data<'a>(self) -> Vec<u8> {
+    pub fn raw_data(self) -> Vec<u8> {
         let rc: RawCommand = self.into();
 
         let b = rc.0.as_bytes().to_owned();
@@ -20,17 +20,25 @@ impl Command {
     }
 }
 
-struct RawCommand(pub ArrForm::<32>);
+struct RawCommand(pub String);
 
 impl From<Command> for RawCommand {
     fn from(value: Command) -> Self {
         let v = match value {
-            Command::Play => arrform!(32, "play"),
-            Command::Stop => arrform!(32, "stop"),
-            Command::SetFreq(f) => arrform!(32, "set freq {}", f),
-            Command::SetSong(idx) => arrform!(32, "set song {}", idx),
-            Command::GetSongs => arrform!(32, "get songs"),
-            Command::Exit => arrform!(32, "exit"),
+            Command::Play => "play".to_owned(),
+            Command::Stop => "stop".to_owned(),
+            Command::SetFreq(f) => {
+                let mut s = "set freq ".to_owned();
+                s.push_str(Buffer::new().format(f));
+                s
+            },
+            Command::SetSong(idx) => {
+                let mut s = "set song ".to_owned();
+                s.push_str(Buffer::new().format(idx));
+                s
+            },
+            Command::GetSongs => "get songs".to_owned(),
+            Command::Exit => "exit".to_owned(),
         };
 
         RawCommand(v)

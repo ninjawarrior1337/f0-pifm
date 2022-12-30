@@ -11,16 +11,7 @@ use core::time::Duration;
 use alloc::{rc::Rc, sync::Arc, vec::Vec};
 
 use commands::Command;
-use embedded_graphics::{
-    image::Image,
-    mono_font::{ascii::FONT_6X9, MonoFont, MonoTextStyle},
-    pixelcolor::BinaryColor,
-    prelude::{Point, Size, DrawTarget},
-    primitives::{Rectangle, PrimitiveStyle, Circle, Line, Primitive},
-    text::Text,
-    Drawable,
-};
-use embedded_layout::{layout::linear::{spacing, LinearLayout}, View};
+
 use flipperzero::furi::{
     message_queue::MessageQueue,
     sync::{Mutex, MutexGuard},
@@ -31,10 +22,11 @@ use flipperzero_sys as sys;
 
 use statig::{
     InitializedStatemachine,
-    Response::{self, Transition, Handled},
+    Response::{self, Handled, Transition},
     StateMachine, StateMachineSharedStorage,
 };
 
+use sys::c_string;
 use totsugeki::{
     canvas::Canvas,
     gui::GuiHandle,
@@ -51,35 +43,45 @@ manifest!(
 entry!(main);
 
 fn draw_callback(cv: &mut Canvas, app: MutexGuard<InitializedStatemachine<AppState>>) {
-    use embedded_layout::prelude::*;
+    unsafe {
+        sys::canvas_draw_str_aligned(
+            cv.0,
+            cv.width() / 2,
+            cv.height() / 2,
+            sys::Align_AlignCenter,
+            sys::Align_AlignCenter,
+            c_string!("Hello World"),
+        )
+    }
+    // use embedded_layout::prelude::*;
 
-    let mut text_style_sel = MonoTextStyle::new(&FONT_6X9, BinaryColor::Off);
-    text_style_sel.background_color = Some(BinaryColor::On);
-    let mut text_style_desel = MonoTextStyle::new(&FONT_6X9, BinaryColor::On);
-    text_style_desel.background_color = Some(BinaryColor::Off);
+    // let mut text_style_sel = MonoTextStyle::new(&FONT_6X9, BinaryColor::Off);
+    // text_style_sel.background_color = Some(BinaryColor::On);
+    // let mut text_style_desel = MonoTextStyle::new(&FONT_6X9, BinaryColor::On);
+    // text_style_desel.background_color = Some(BinaryColor::Off);
 
-    let mut ui = match app.state() {
-        State::Start {} => {
-            alloc::vec![
-                Text::new("Start", Point::zero(), text_style_sel),
-                Text::new("Stop", Point::zero(), text_style_desel),
-            ]
-        }
-        State::Stop {} => {
-            alloc::vec![
-                Text::new("Start", Point::zero(), text_style_desel),
-                Text::new("Stop", Point::zero(), text_style_sel),
-            ]
-        }
-    };
+    // let mut ui = match app.state() {
+    //     State::Start {} => {
+    //         alloc::vec![
+    //             Text::new("Start", Point::zero(), text_style_sel),
+    //             Text::new("Stop", Point::zero(), text_style_desel),
+    //         ]
+    //     }
+    //     State::Stop {} => {
+    //         alloc::vec![
+    //             Text::new("Start", Point::zero(), text_style_desel),
+    //             Text::new("Stop", Point::zero(), text_style_sel),
+    //         ]
+    //     }
+    // };
 
-    LinearLayout::vertical(Views::new(&mut ui))
-        .with_alignment(horizontal::Center)
-        .with_spacing(spacing::FixedMargin(4))
-        .arrange()
-        .align_to(&cv.bounding_box(), horizontal::Center, vertical::Center)
-        .draw(cv)
-        .unwrap();
+    // LinearLayout::vertical(Views::new(&mut ui))
+    //     .with_alignment(horizontal::Center)
+    //     .with_spacing(spacing::FixedMargin(4))
+    //     .arrange()
+    //     .align_to(&cv.bounding_box(), horizontal::Center, vertical::Center)
+    //     .draw(cv)
+    //     .unwrap();
 }
 
 #[derive(Default)]
@@ -96,13 +98,13 @@ impl AppState {
             InputKey::Up | InputKey::Down => {
                 self.home_selected = (self.home_selected + 1) % 2;
                 Transition(State::stop())
-            },
+            }
             InputKey::Ok => {
                 let c = Command::Play;
                 totsugeki::misc::send_over_uart(&mut c.raw_data());
                 Handled
             }
-            _ => Handled
+            _ => Handled,
         }
     }
 
@@ -112,13 +114,13 @@ impl AppState {
             InputKey::Up | InputKey::Down => {
                 self.home_selected = (self.home_selected + 1) % 2;
                 Transition(State::start())
-            },
+            }
             InputKey::Ok => {
                 let c = Command::Stop;
                 totsugeki::misc::send_over_uart(&mut c.raw_data());
                 Handled
             }
-            _ => Handled
+            _ => Handled,
         }
     }
 }
