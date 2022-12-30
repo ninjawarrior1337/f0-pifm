@@ -118,8 +118,7 @@ checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 [[package]]
 name = "flipperzero"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34a1a0721882cdb88f1599498d9352fa21995dea214a715fd55a69a41c122ee8"
+source = "git+https://github.com/ninjawarrior1337/flipperzero-rs#3d1984237b1e79f78671930a90097557927948ca"
 dependencies = [
  "flipperzero-sys",
 ]
@@ -127,8 +126,7 @@ dependencies = [
 [[package]]
 name = "flipperzero-alloc"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "782f1f833c285dab94ef52e76168e99a9946f3a70320b9bfb1acafafe6295336"
+source = "git+https://github.com/ninjawarrior1337/flipperzero-rs#3d1984237b1e79f78671930a90097557927948ca"
 dependencies = [
  "flipperzero-sys",
 ]
@@ -136,8 +134,7 @@ dependencies = [
 [[package]]
 name = "flipperzero-rt"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "696e4c7fc6340dd39a8086559f962bbce9ce198b0b0bec9504157b6dc307d407"
+source = "git+https://github.com/ninjawarrior1337/flipperzero-rs#3d1984237b1e79f78671930a90097557927948ca"
 dependencies = [
  "flipperzero-sys",
 ]
@@ -145,8 +142,7 @@ dependencies = [
 [[package]]
 name = "flipperzero-sys"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e89a221108d5bc742be8f0df4cd3ad3d17a45efefd19a79222b0ae300ed26323"
+source = "git+https://github.com/ninjawarrior1337/flipperzero-rs#3d1984237b1e79f78671930a90097557927948ca"
 
 [[package]]
 name = "float-cmp"

@@ -17,7 +17,7 @@ test = false
 flipperzero = {workspace = true}
 flipperzero-sys = {workspace = true}
 flipperzero-alloc = {workspace = true}
-flipperzero-rt = "0.5"
+flipperzero-rt = {workspace = true}
 totsugeki = { path = "../totsugeki", version = "*" }
 
 itoa = "1.0"

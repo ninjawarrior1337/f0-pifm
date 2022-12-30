@@ -6,9 +6,14 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-flipperzero = "0.5"
-flipperzero-alloc = "0.5"
-flipperzero-sys = "0.5"
+# flipperzero = "0.5"
+# flipperzero-alloc = "0.5"
+# flipperzero-sys = "0.5"
+
+flipperzero = { git = "https://github.com/ninjawarrior1337/flipperzero-rs"}
+flipperzero-alloc = { git = "https://github.com/ninjawarrior1337/flipperzero-rs"}
+flipperzero-sys = { git = "https://github.com/ninjawarrior1337/flipperzero-rs"}
+flipperzero-rt = { git = "https://github.com/ninjawarrior1337/flipperzero-rs"}
 
 [workspace.package]
 authors = ["Treelar"]
